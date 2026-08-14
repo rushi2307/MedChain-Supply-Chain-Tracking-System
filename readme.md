@@ -266,7 +266,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Issues**: Report bugs and request features via GitHub Issues
 - **Documentation**: See [Frontend Documentation](MedChain/frontend/MedChain_Frontend_Documentation.md)
-- **Email**: your.email@example.com
+- **Email**: rushikeshkamble1714@gmail.com
+- **Email**: inaya.khan1002@gmail.com
+- **Email**: kulkarnisiddhesh6@gmail.com
+
 
 ## Quick Commands Reference
 
