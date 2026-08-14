@@ -1,0 +1,27 @@
+{
+  "name": "medchain-backend",
+  "version": "1.0.0",
+  "description": "Backend server for MedChain with Ethereum blockchain",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "test": "hardhat test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^8.0.3",
+    "mssql": "^12.5.0",
+    "mysql2": "^3.22.3"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "ethers": "^6.11.0",
+    "hardhat": "^2.19.0"
+  }
+}

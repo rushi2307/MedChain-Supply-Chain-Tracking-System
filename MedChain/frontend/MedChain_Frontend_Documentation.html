@@ -1,0 +1,387 @@
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedChain Frontend Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+        h1, h2, h3, h4 { color: #2c3e50; }
+        h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; margin-top: 30px; }
+        h3 { color: #34495e; margin-top: 20px; }
+        code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        pre { background-color: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        ul { margin-left: 20px; }
+        li { margin-bottom: 5px; }
+        .highlight { background-color: #ecf0f1; padding: 10px; border-left: 4px solid #3498db; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>MedChain Frontend Documentation</h1>
+
+<h2>Overview</h2>
+<p>The MedChain frontend is a simplified React-based web application focused on user login and QR code generation for medicine tracking. It has been stripped down to include only the essential UI components for authentication and QR code creation, removing all backend integrations, blockchain interactions, and scanning functionalities.</p>
+
+<h2>Technologies and Libraries Used</h2>
+
+<h3>React</h3>
+<div class="highlight">
+<p><strong>React</strong> is a JavaScript library for building user interfaces. It allows developers to create reusable UI components and manage application state efficiently.</p>
+<ul>
+<li><strong>Version</strong>: ^19.2.4</li>
+<li><strong>Key Features Used</strong>:</li>
+<ul>
+<li>Functional components with hooks (useState)</li>
+<li>JSX for component rendering</li>
+<li>Component composition</li>
+</ul>
+<li><strong>Why Used</strong>: Provides a declarative way to build interactive UIs, making it easy to manage the login form and dashboard state.</li>
+</ul>
+</div>
+
+<h3>Vite</h3>
+<div class="highlight">
+<p><strong>Vite</strong> is a build tool and development server for modern web projects. It provides fast hot module replacement and optimized production builds.</p>
+<ul>
+<li><strong>Version</strong>: ^8.0.0</li>
+<li><strong>Key Features Used</strong>:</li>
+<ul>
+<li>Development server (<code>npm run dev</code>)</li>
+<li>Build command (<code>vite build</code>)</li>
+<li>ES modules support</li>
+</ul>
+<li><strong>Why Used</strong>: Offers lightning-fast development experience with instant hot reloading, ideal for React development.</li>
+</ul>
+</div>
+
+<h3>TailwindCSS</h3>
+<div class="highlight">
+<p><strong>TailwindCSS</strong> is a utility-first CSS framework for rapidly building custom user interfaces.</p>
+<ul>
+<li><strong>Version</strong>: ^4.2.1</li>
+<li><strong>Key Classes Used</strong>:</li>
+<ul>
+<li><code>min-h-screen</code>: Sets minimum height to full screen</li>
+<li><code>bg-gray-50</code>: Light gray background</li>
+<li><code>flex</code>, <code>flex-col</code>: Flexbox layout</li>
+<li><code>p-4</code>, <code>p-6</code>: Padding utilities</li>
+<li><code>rounded-xl</code>: Border radius</li>
+<li><code>shadow-lg</code>: Box shadow</li>
+<li><code>text-center</code>: Text alignment</li>
+<li><code>hover:bg-blue-700</code>: Hover state for buttons</li>
+</ul>
+<li><strong>Why Used</strong>: Enables rapid styling without writing custom CSS, providing a consistent design system.</li>
+</ul>
+</div>
+
+<h3>qrcode.react</h3>
+<div class="highlight">
+<p><strong>qrcode.react</strong> is a React component for generating QR codes.</p>
+<ul>
+<li><strong>Version</strong>: ^4.2.0</li>
+<li><strong>Key Component Used</strong>: <code>QRCodeSVG</code></li>
+<ul>
+<li><strong>Props</strong>:</li>
+<ul>
+<li><code>value</code>: The data to encode in the QR code (string)</li>
+<li><code>size</code>: Size of the QR code in pixels (number, default 128)</li>
+</ul>
+</ul>
+<li><strong>Why Used</strong>: Provides an easy way to generate QR codes directly in the React component without external dependencies.</li>
+</ul>
+</div>
+
+<h3>Node.js and npm</h3>
+<div class="highlight">
+<p><strong>Node.js</strong> is a JavaScript runtime built on Chrome's V8 JavaScript engine.</p>
+<p><strong>npm</strong> is the package manager for Node.js.</p>
+<ul>
+<li><strong>Used for</strong>: Managing project dependencies, running scripts, and development server.</li>
+<li><strong>Commands Used</strong>:</li>
+<ul>
+<li><code>npm install</code>: Installs dependencies from package.json</li>
+<li><code>npm run dev</code>: Starts the Vite development server</li>
+</ul>
+</ul>
+</div>
+
+<h2>Project Structure</h2>
+<pre>
+MedChain/frontend/
+├── src/
+│   ├── App.jsx          # Main application component
+│   ├── main.jsx         # Application entry point
+│   ├── index.css        # Global styles
+│   └── App.css          # Component-specific styles
+├── public/              # Static assets
+├── package.json         # Project dependencies and scripts
+├── vite.config.js       # Vite configuration
+├── postcss.config.js    # PostCSS configuration for TailwindCSS
+├── tailwind.config.js   # TailwindCSS configuration
+├── eslint.config.js     # ESLint configuration
+└── index.html           # HTML template
+</pre>
+
+<h2>Detailed Component Analysis</h2>
+
+<h3>App.jsx</h3>
+
+<h4>Imports</h4>
+<pre><code>import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'</code></pre>
+<ul>
+<li><code>useState</code>: React hook for managing component state</li>
+<li><code>QRCodeSVG</code>: Component from qrcode.react library for rendering QR codes</li>
+</ul>
+
+<h4>Hardcoded Data</h4>
+<pre><code>const users = [
+  { email: 'manufacturer@medchain.com', password: 'password123', role: 'Manufacturer', id: 1 }
+]</code></pre>
+<ul>
+<li>Array of user objects for authentication simulation</li>
+<li>Properties: email, password, role, id</li>
+</ul>
+
+<h4>App Component</h4>
+<p>Main application component that manages user authentication state.</p>
+
+<p><strong>State Variables</strong>:</p>
+<ul>
+<li><code>user</code>: Stores the currently logged-in user object or null</li>
+</ul>
+
+<p><strong>Functions</strong>:</p>
+<ul>
+<li><code>login(email, password)</code>: Checks credentials against hardcoded users array</li>
+<li><code>logout()</code>: Clears user state</li>
+</ul>
+
+<p><strong>JSX Structure</strong>:</p>
+<ul>
+<li>Navigation bar with branding and user info/logout button</li>
+<li>Conditional rendering: Login form or ManufacturerDashboard based on authentication status</li>
+</ul>
+
+<h4>Login Component</h4>
+<p>Functional component for user authentication.</p>
+
+<p><strong>State Variables</strong>:</p>
+<ul>
+<li><code>email</code>: Stores email input value</li>
+<li><code>password</code>: Stores password input value</li>
+</ul>
+
+<p><strong>JSX Elements</strong>:</p>
+<ul>
+<li>Form with email and password inputs</li>
+<li>Submit button that calls parent <code>login</code> function</li>
+<li>TailwindCSS classes for styling</li>
+</ul>
+
+<h4>ManufacturerDashboard Component</h4>
+<p>Component for generating QR codes for medicines.</p>
+
+<p><strong>State Variables</strong>:</p>
+<ul>
+<li><code>name</code>: Medicine name input</li>
+<li><code>batch</code>: Batch number input</li>
+<li><code>createdMed</code>: Stores generated medicine data with QR code</li>
+</ul>
+
+<p><strong>Functions</strong>:</p>
+<ul>
+<li><code>registerMedicine()</code>: Generates mock blockchain ID, creates QR data, and sets createdMed state</li>
+</ul>
+
+<p><strong>Methods Used</strong>:</p>
+<ul>
+<li><code>Math.floor(Math.random() * 1000000).toString()</code>: Generates random 6-digit ID</li>
+<li><code>JSON.stringify()</code>: Converts object to JSON string for QR encoding</li>
+<li><code>alert()</code>: Browser API for displaying notifications</li>
+</ul>
+
+<p><strong>JSX Structure</strong>:</p>
+<ul>
+<li>Input fields for medicine name and batch</li>
+<li>Generate QR button</li>
+<li>Conditional display of generated QR code with medicine details</li>
+</ul>
+
+<h3>main.jsx</h3>
+<p>Entry point for the React application.</p>
+
+<p><strong>Imports</strong>:</p>
+<ul>
+<li><code>StrictMode</code>: React component for highlighting potential problems</li>
+<li><code>createRoot</code>: React 18 API for rendering</li>
+<li><code>./index.css</code>: Global styles</li>
+<li><code>App</code>: Main application component</li>
+</ul>
+
+<p><strong>Rendering</strong>:</p>
+<pre><code>createRoot(document.getElementById('root')).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+)</code></pre>
+
+<h3>index.css</h3>
+<p>Contains global CSS styles and TailwindCSS directives.</p>
+
+<p><strong>Directives</strong>:</p>
+<ul>
+<li><code>@tailwind base;</code>: Includes Tailwind's base styles</li>
+<li><code>@tailwind components;</code>: Includes Tailwind's component styles</li>
+<li><code>@tailwind utilities;</code>: Includes Tailwind's utility classes</li>
+</ul>
+
+<h2>Configuration Files</h2>
+
+<h3>package.json</h3>
+<p>Defines project metadata, dependencies, and scripts.</p>
+
+<p><strong>Key Sections</strong>:</p>
+<ul>
+<li><code>name</code>, <code>version</code>: Project identification</li>
+<li><code>scripts</code>: Available npm commands</li>
+<li><code>dependencies</code>: Runtime dependencies</li>
+<li><code>devDependencies</code>: Development-only dependencies</li>
+</ul>
+
+<h3>vite.config.js</h3>
+<p>Configuration for Vite build tool.</p>
+
+<p><strong>Typical Content</strong>:</p>
+<pre><code>import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})</code></pre>
+
+<h3>postcss.config.js</h3>
+<p>Configuration for PostCSS, used by TailwindCSS.</p>
+
+<p><strong>Content</strong>:</p>
+<pre><code>export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}</code></pre>
+
+<h3>tailwind.config.js</h3>
+<p>Configuration for TailwindCSS.</p>
+
+<p><strong>Content</strong>:</p>
+<pre><code>export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}</code></pre>
+
+<h3>eslint.config.js</h3>
+<p>Configuration for ESLint code linting.</p>
+
+<p><strong>Typical Rules</strong>:</p>
+<ul>
+<li>React-specific linting rules</li>
+<li>Code style enforcement</li>
+</ul>
+
+<h2>How to Run the Application</h2>
+
+<ol>
+<li><strong>Prerequisites</strong>:</li>
+<ul>
+<li>Node.js installed (version 16 or higher)</li>
+<li>npm package manager</li>
+</ul>
+
+<li><strong>Installation</strong>:</li>
+<pre><code>cd MedChain/frontend
+npm install</code></pre>
+
+<li><strong>Development</strong>:</li>
+<pre><code>npm run dev</code></pre>
+<ul>
+<li>Starts development server at http://localhost:5173</li>
+<li>Hot reloading enabled</li>
+</ul>
+
+<li><strong>Build for Production</strong>:</li>
+<pre><code>npm run build</code></pre>
+<ul>
+<li>Creates optimized build in <code>dist/</code> folder</li>
+</ul>
+
+<li><strong>Preview Production Build</strong>:</li>
+<pre><code>npm run preview</code></pre>
+</ol>
+
+<h2>Usage Instructions</h2>
+
+<ol>
+<li><strong>Login</strong>:</li>
+<ul>
+<li>Email: manufacturer@medchain.com</li>
+<li>Password: password123</li>
+</ul>
+
+<li><strong>Generate QR Code</strong>:</li>
+<ul>
+<li>Enter medicine name</li>
+<li>Enter batch number</li>
+<li>Click "Generate QR"</li>
+<li>QR code displays with medicine details</li>
+</ul>
+</ol>
+
+<h2>Browser APIs Used</h2>
+<ul>
+<li><code>document.getElementById()</code>: DOM manipulation for React root</li>
+<li><code>alert()</code>: User notifications</li>
+<li><code>Math.random()</code>: Random number generation</li>
+<li><code>JSON.stringify()</code>: Object serialization</li>
+</ul>
+
+<h2>Security Considerations</h2>
+<ul>
+<li>Passwords are hardcoded (not suitable for production)</li>
+<li>No actual authentication or authorization</li>
+<li>No input validation or sanitization</li>
+<li>No HTTPS enforcement</li>
+</ul>
+
+<h2>Performance Notes</h2>
+<ul>
+<li>Lightweight bundle due to minimal dependencies</li>
+<li>Fast rendering with React's virtual DOM</li>
+<li>Optimized CSS with TailwindCSS purging</li>
+<li>QR code generation is client-side only</li>
+</ul>
+
+<h2>Future Enhancements</h2>
+<ul>
+<li>Add proper authentication system</li>
+<li>Implement input validation</li>
+<li>Add more user roles</li>
+<li>Integrate with backend APIs</li>
+<li>Add QR code scanning functionality</li>
+<li>Implement responsive design improvements</li>
+</ul>
+
+<hr>
+<p><em>This documentation covers all technologies, libraries, methods, and components used in the MedChain frontend application. For production use, additional security measures and backend integration would be required.</em></p>
+
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\rushi\OneDrive\Desktop\Final Year Project\MedChain\frontend\MedChain_Frontend_Documentation.html
