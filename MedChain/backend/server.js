@@ -1,36 +1,37 @@
+require("dotenv").config();
 
+const express = require("express");
+const cors = require("cors");
+const medicineRoutes = require("./routes/medicine");
+const { connectDB } = require("./config/db");
+const requestLogger = require("./middleware/requestLogger");
+const logger = require("./utils/logger");
 
-require('dotenv').config();
-const express = require('express')
-const cors = require('cors')
-const medicineRoutes = require('./routes/medicine')
-const { connectDB } = require('./config/db')
+const app = express();
 
-const app = express()
-const PORT = process.env.PORT || 5000
+app.use(cors());
+app.use(express.json());
+app.use(requestLogger);
+app.use("/api/medicines", medicineRoutes);
 
-app.use(cors())
-app.use(express.json())
-app.use('/api/medicines', medicineRoutes)
+// Test API
+app.get("/", (req, res) => {
+  res.send("MedChain Backend is Running!");
+});
 
-connectDB()
-  .then(() => {
-    console.log('✓ Connected to MongoDB Atlas successfully')
-  })
-  .catch(err => {
-    console.error('✗ MongoDB connection error:', err.message)
-    console.error('Make sure:')
-    console.error('  1. MongoDB Atlas cluster is running')
-    console.error('  2. MONGODB_URI in .env is correct')
-    console.error('  3. IP address is whitelisted in MongoDB Atlas')
-    console.error('  4. Database credentials are correct')
-    process.exit(1)
-  })
+const PORT = process.env.PORT || 5000;
 
-app.get('/', (req, res) => {
-  res.json({ message: 'MedChain API is running' })
-})
+async function startServer() {
+  try {
+    await connectDB();
+    logger.info("database.connected", { database: process.env.MONGODB_URI?.replace(/\/\/.*@/, "//***@") });
+    app.listen(PORT, () => {
+      logger.info("server.started", { port: PORT, network: process.env.NETWORK || "localhost" });
+    });
+  } catch (error) {
+    logger.error("server.start_failed", { error: error.message });
+    process.exitCode = 1;
+  }
+}
 
-app.listen(PORT, () => {
-  console.log(`✓ Server running on port ${PORT}`)
-})
+startServer();

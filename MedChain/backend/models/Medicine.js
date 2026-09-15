@@ -6,6 +6,19 @@ const medicineSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  blockchainTransactionHash: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  blockchainBlockNumber: {
+    type: Number,
+    required: true
+  },
+  blockchainNetwork: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -53,6 +66,20 @@ const medicineSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     default: 0
+  },
+  distributor: {
+    type: String,
+    default: ''
+  },
+  retailer: {
+    type: String,
+    default: ''
+  },
+  orderDate: {
+    type: Date
+  },
+  orderedQuantity: {
+    type: Number
   },
   status: {
     type: String,

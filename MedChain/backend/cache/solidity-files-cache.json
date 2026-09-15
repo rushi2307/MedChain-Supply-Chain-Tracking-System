@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\rushi\\OneDrive\\Desktop\\MedChain\\MedChain\\backend\\contracts\\MedicineChain.sol": {
+      "lastModificationDate": 1789304051106,
+      "contentHash": "31b7e69943a0619c8348d1941e740961",
+      "sourceName": "contracts/MedicineChain.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "MedicineChain"
+      ]
+    }
+  }
+}

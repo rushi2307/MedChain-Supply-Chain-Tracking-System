@@ -34,7 +34,7 @@ function Interface({ onSelectRole, onSignup }) {
           <div className="developer-grid">
             <div className="developer-card">
               <h3>Hrushikesh kamble</h3>
-              
+
               <p>Frontend Developer</p>
               <p>Designs the user experience and landing pages.</p>
             </div>
@@ -53,7 +53,7 @@ function Interface({ onSelectRole, onSignup }) {
           </div>
         </main>
       </div>
-      
+
     )
   }
 
@@ -96,7 +96,10 @@ function Interface({ onSelectRole, onSignup }) {
               Login as Distributor
             </button>
             <button className="login-option" onClick={() => onSelectRole('Retailer')}>
-              Login as Vendor
+              Login as Retailer
+            </button>
+            <button className="login-option" onClick={() => onSelectRole('Consumer')}>
+              Login as Consumer
             </button>
           </div>
 
@@ -119,4 +122,4 @@ function Interface({ onSelectRole, onSignup }) {
   )
 }
 
-export default Interface
+export default Interface 

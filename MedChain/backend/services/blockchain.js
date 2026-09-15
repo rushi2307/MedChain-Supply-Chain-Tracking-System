@@ -1,7 +1,8 @@
 require('dotenv').config();
-const { ethers } = require('hardhat');
+const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 const CONTRACT_ABI = [
   "function medicines(string memory) public view returns (string memory name, string memory manufacturer, uint256 manufacturingDate, uint256 expiryDate, string memory batchNumber, string memory currentLocation, address currentOwner, uint8 status, bool isRegistered)",
@@ -71,13 +72,11 @@ class BlockchainService {
       );
 
       this.isInitialized = true;
-      console.log('Blockchain service initialized');
-      console.log('Contract address:', contractAddress);
-      console.log('Network:', networkName);
+      logger.info('blockchain.initialized', { contractAddress, network: networkName });
 
       return true;
     } catch (error) {
-      console.error('Failed to initialize blockchain service:', error.message);
+      logger.error('blockchain.initialization_failed', { error: error.message });
       return false;
     }
   }
@@ -94,23 +93,39 @@ class BlockchainService {
     }
   }
 
+  resetSignerNonce() {
+    if (this.provider && process.env.PRIVATE_KEY) {
+      this.signer = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
+      this.contract = this.contract.connect(this.signer);
+    }
+  }
+
+  async getWriteOverrides() {
+    const address = await this.signer.getAddress();
+    // Use a raw RPC request to bypass JsonRpcProvider's short-lived nonce cache.
+    const hexNonce = await this.provider.send('eth_getTransactionCount', [address, 'pending']);
+    return { nonce: Number(BigInt(hexNonce)) };
+  }
+
   async registerMedicine(medicineData) {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
     try {
+      this.resetSignerNonce();
       const tx = await this.contract.registerMedicine(
         medicineData.name,
         medicineData.manufacturer,
         Math.floor(new Date(medicineData.manufacturingDate).getTime() / 1000),
         Math.floor(new Date(medicineData.expiryDate).getTime() / 1000),
         medicineData.batchNumber,
-        medicineData.currentLocation
+        medicineData.currentLocation,
+        await this.getWriteOverrides()
       );
 
       const receipt = await tx.wait();
-      console.log('Medicine registered on blockchain. Transaction:', receipt.hash);
+      logger.info('blockchain.medicine_registered', { batchNumber: medicineData.batchNumber, transactionHash: receipt.hash, blockNumber: receipt.blockNumber });
 
       return {
         success: true,
@@ -118,7 +133,7 @@ class BlockchainService {
         blockNumber: receipt.blockNumber
       };
     } catch (error) {
-      console.error('Failed to register medicine on blockchain:', error.message);
+      logger.error('blockchain.medicine_registration_failed', { batchNumber: medicineData.batchNumber, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -129,14 +144,16 @@ class BlockchainService {
     }
 
     try {
+      this.resetSignerNonce();
       const tx = await this.contract.transferMedicine(
         batchNumber,
         newOwner,
-        newLocation
+        newLocation,
+        await this.getWriteOverrides()
       );
 
       const receipt = await tx.wait();
-      console.log('Medicine transferred. Transaction:', receipt.hash);
+      logger.info('blockchain.medicine_transferred', { batchNumber, transactionHash: receipt.hash, blockNumber: receipt.blockNumber });
 
       return {
         success: true,
@@ -144,7 +161,7 @@ class BlockchainService {
         blockNumber: receipt.blockNumber
       };
     } catch (error) {
-      console.error('Failed to transfer medicine:', error.message);
+      logger.error('blockchain.medicine_transfer_failed', { batchNumber, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -155,7 +172,8 @@ class BlockchainService {
     }
 
     try {
-      const tx = await this.contract.updateStatus(batchNumber, status);
+      this.resetSignerNonce();
+      const tx = await this.contract.updateStatus(batchNumber, status, await this.getWriteOverrides());
       const receipt = await tx.wait();
 
       return {
@@ -164,7 +182,7 @@ class BlockchainService {
         blockNumber: receipt.blockNumber
       };
     } catch (error) {
-      console.error('Failed to update status:', error.message);
+      logger.error('blockchain.status_update_failed', { batchNumber, status, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -175,11 +193,13 @@ class BlockchainService {
     }
 
     try {
+      this.resetSignerNonce();
       const tx = await this.contract.recordSupplyChainEvent(
         batchNumber,
         action,
         location,
-        description
+        description,
+        await this.getWriteOverrides()
       );
 
       const receipt = await tx.wait();
@@ -190,7 +210,7 @@ class BlockchainService {
         blockNumber: receipt.blockNumber
       };
     } catch (error) {
-      console.error('Failed to record event:', error.message);
+      logger.error('blockchain.event_record_failed', { batchNumber, action, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -208,15 +228,15 @@ class BlockchainService {
         data: {
           name: medicine.name,
           manufacturer: medicine.manufacturer,
-          manufacturingDate: new Date(medicine.manufacturingDate * 1000).toISOString(),
-          expiryDate: new Date(medicine.expiryDate * 1000).toISOString(),
+          manufacturingDate: new Date(Number(medicine.manufacturingDate) * 1000).toISOString(),
+          expiryDate: new Date(Number(medicine.expiryDate) * 1000).toISOString(),
           currentLocation: medicine.currentLocation,
           currentOwner: medicine.currentOwner,
           status: MedicineStatus[medicine.status] || 'Unknown'
         }
       };
     } catch (error) {
-      console.error('Failed to get medicine:', error.message);
+      logger.error('blockchain.medicine_read_failed', { batchNumber, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -230,20 +250,20 @@ class BlockchainService {
       const length = await this.contract.getHistoryLength(batchNumber);
       const history = [];
 
-      for (let i = 0; i < length; i++) {
+      for (let i = 0; i < Number(length); i++) {
         const event = await this.contract.getSupplyChainEvent(batchNumber, i);
         history.push({
           action: event.action,
           location: event.location,
           description: event.description,
-          timestamp: new Date(event.timestamp * 1000).toISOString(),
+          timestamp: new Date(Number(event.timestamp) * 1000).toISOString(),
           actor: event.actor
         });
       }
 
       return { success: true, history };
     } catch (error) {
-      console.error('Failed to get history:', error.message);
+      logger.error('blockchain.history_read_failed', { batchNumber, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -257,7 +277,7 @@ class BlockchainService {
       const expired = await this.contract.isExpired(batchNumber);
       return { success: true, expired };
     } catch (error) {
-      console.error('Failed to check expiry:', error.message);
+      logger.error('blockchain.expiry_check_failed', { batchNumber, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -268,7 +288,8 @@ class BlockchainService {
     }
 
     try {
-      const tx = await this.contract.authorizeManufacturer(account, authorized);
+      this.resetSignerNonce();
+      const tx = await this.contract.authorizeManufacturer(account, authorized, await this.getWriteOverrides());
       const receipt = await tx.wait();
 
       return {
@@ -276,7 +297,7 @@ class BlockchainService {
         transactionHash: receipt.hash
       };
     } catch (error) {
-      console.error('Failed to authorize manufacturer:', error.message);
+      logger.error('blockchain.manufacturer_authorization_failed', { account, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -287,7 +308,8 @@ class BlockchainService {
     }
 
     try {
-      const tx = await this.contract.authorizeDistributor(account, authorized);
+      this.resetSignerNonce();
+      const tx = await this.contract.authorizeDistributor(account, authorized, await this.getWriteOverrides());
       const receipt = await tx.wait();
 
       return {
@@ -295,7 +317,7 @@ class BlockchainService {
         transactionHash: receipt.hash
       };
     } catch (error) {
-      console.error('Failed to authorize distributor:', error.message);
+      logger.error('blockchain.distributor_authorization_failed', { account, error: error.message });
       return { success: false, error: error.message };
     }
   }
@@ -309,7 +331,7 @@ class BlockchainService {
       const count = await this.contract.medicineCount();
       return { success: true, count: Number(count) };
     } catch (error) {
-      console.error('Failed to get count:', error.message);
+      logger.error('blockchain.count_read_failed', { error: error.message });
       return { success: false, error: error.message };
     }
   }

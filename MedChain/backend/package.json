@@ -7,7 +7,13 @@
     "start": "node server.js",
     "dev": "node server.js",
     "compile": "hardhat compile",
-    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "deploy": "node scripts/deploy.js",
+    "seed": "node scripts/seed.js",
+    "test:api": "node scripts/test-api.js",
+    "test:blockchain": "node scripts/test-blockchain.js",
+    "test:all": "npm run compile && npm run test:blockchain && npm run test:api",
+    "verify-mongodb": "node verify-mongodb.js",
+    "diagnostics": "node advanced-diagnostics.js",
     "test": "hardhat test"
   },
   "dependencies": {

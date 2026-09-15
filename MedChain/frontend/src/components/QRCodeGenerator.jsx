@@ -43,7 +43,7 @@ function QRCodeGenerator() {
           placeholder="Enter data for QR code (batch number, medicine name, etc.)"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && generateQR()}
+          onKeyDown={(e) => e.key === 'Enter' && generateQR()}
           style={{
             width: '100%',
             padding: '10px',
