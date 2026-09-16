@@ -11,6 +11,15 @@ button { cursor: pointer; }
 .animate-in { animation: rise .5s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .qr-reader video { border-radius: 12px; }
+.grain.mesh > main > section:nth-child(2) > div.relative > div > div:last-child {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 32, 51, .28) transparent;
+}
+.grain.mesh > main > section:nth-child(2) > div.relative > div > div:last-child::-webkit-scrollbar { width: 6px; }
+.grain.mesh > main > section:nth-child(2) > div.relative > div > div:last-child::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(21, 32, 51, .28); }
 
 .signup-back:hover {
   color: #073f3c;
@@ -18,6 +27,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 560px) {
+  .grain.mesh > main > section:nth-child(2) > div.relative > div > div:last-child { max-height: 360px; }
   .signup-card {
     margin: 20px auto;
     padding: 30px 22px;

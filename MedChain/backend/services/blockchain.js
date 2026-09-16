@@ -44,6 +44,19 @@ class BlockchainService {
     this.isInitialized = false;
   }
 
+  isDemoMode() {
+    return process.env.DEMO_MODE === 'true';
+  }
+
+  createDemoTransaction(action, identity) {
+    const seed = `${action}:${identity}:${Date.now()}:${Math.random()}`;
+    return {
+      success: true,
+      transactionHash: ethers.keccak256(ethers.toUtf8Bytes(seed)),
+      blockNumber: Math.floor(Date.now() / 1000)
+    };
+  }
+
   async initialize() {
     try {
       const networkName = process.env.NETWORK || 'localhost';
@@ -93,6 +106,72 @@ class BlockchainService {
     }
   }
 
+  getExplorerUrl(networkName, hash) {
+    const explorers = {
+      mainnet: 'https://etherscan.io/tx/',
+      sepolia: 'https://sepolia.etherscan.io/tx/'
+    };
+    return explorers[networkName] ? `${explorers[networkName]}${hash}` : null;
+  }
+
+  async getTransactionFeed(medicines) {
+    if (this.isDemoMode()) {
+      const transactions = medicines.map((medicine) => ({
+        id: medicine._id,
+        type: medicine.status === 'InTransit' ? 'Distribution transfer' : medicine.status === 'Stored' ? 'Inventory verified' : medicine.status === 'Sold' ? 'Retail handoff' : 'Medicine registered',
+        name: medicine.name || medicine.batchNumber,
+        batchNumber: medicine.batchNumber,
+        hash: medicine.blockchainTransactionHash,
+        blockNumber: medicine.blockchainBlockNumber,
+        confirmations: 1,
+        status: 'Confirmed',
+        timestamp: medicine.createdAt,
+        network: 'local-demo',
+        chainId: 31337,
+        explorerUrl: null
+      }));
+      return { available: true, demo: true, network: 'local-demo', chainId: 31337, latestBlock: transactions[0]?.blockNumber || 0, contractAddress: 'demo-local-contract', explorerUrl: null, transactions };
+    }
+
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    const networkName = process.env.NETWORK || 'localhost';
+    const network = await this.provider.getNetwork();
+    const latestBlock = await this.provider.getBlockNumber();
+    const transactions = await Promise.all(medicines.map(async (medicine) => {
+      const hash = medicine.blockchainTransactionHash;
+      const receipt = await this.provider.getTransactionReceipt(hash);
+      const blockNumber = receipt?.blockNumber || medicine.blockchainBlockNumber;
+      const confirmations = receipt ? Math.max(0, latestBlock - receipt.blockNumber + 1) : 0;
+
+      return {
+        id: medicine._id,
+        type: medicine.status === 'InTransit' ? 'Distribution transfer' : medicine.status === 'Stored' ? 'Inventory verified' : medicine.status === 'Sold' ? 'Retail handoff' : 'Medicine registered',
+        name: medicine.name || medicine.batchNumber,
+        batchNumber: medicine.batchNumber,
+        hash,
+        blockNumber,
+        confirmations,
+        status: receipt?.status === 1 ? 'Confirmed' : receipt ? 'Failed' : 'Pending',
+        timestamp: medicine.createdAt,
+        network: networkName,
+        chainId: Number(network.chainId),
+        explorerUrl: this.getExplorerUrl(networkName, hash)
+      };
+    }));
+
+    return {
+      network: networkName,
+      chainId: Number(network.chainId),
+      latestBlock,
+      contractAddress: this.contract.target,
+      explorerUrl: networkName === 'mainnet' ? 'https://etherscan.io/address/' : networkName === 'sepolia' ? 'https://sepolia.etherscan.io/address/' : null,
+      transactions
+    };
+  }
+
   resetSignerNonce() {
     if (this.provider && process.env.PRIVATE_KEY) {
       this.signer = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
@@ -108,6 +187,7 @@ class BlockchainService {
   }
 
   async registerMedicine(medicineData) {
+    if (this.isDemoMode()) return this.createDemoTransaction('register', medicineData.batchNumber);
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -139,6 +219,7 @@ class BlockchainService {
   }
 
   async transferMedicine(batchNumber, newOwner, newLocation) {
+    if (this.isDemoMode()) return this.createDemoTransaction('transfer', batchNumber);
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -167,6 +248,7 @@ class BlockchainService {
   }
 
   async updateStatus(batchNumber, status) {
+    if (this.isDemoMode()) return this.createDemoTransaction(`status-${status}`, batchNumber);
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -188,6 +270,7 @@ class BlockchainService {
   }
 
   async recordSupplyChainEvent(batchNumber, action, location, description) {
+    if (this.isDemoMode()) return this.createDemoTransaction(`event-${action}`, batchNumber);
     if (!this.isInitialized) {
       await this.initialize();
     }

@@ -47,6 +47,35 @@ router.get('/', async (req, res) => {
   } catch (error) { sendError(res, error, 'Failed to fetch medicines'); }
 });
 
+router.get('/transactions/feed', async (req, res) => {
+  let medicines = [];
+  try {
+    medicines = await Medicine.find().sort({ createdAt: -1 }).limit(12);
+    res.json(await blockchain.getTransactionFeed(medicines));
+  } catch (error) {
+    logger.warn('medicine.blockchain_feed_unavailable', { error: error.message });
+    res.json({
+      available: false,
+      network: 'unavailable',
+      chainId: null,
+      latestBlock: null,
+      contractAddress: null,
+      transactions: medicines.map((medicine) => ({
+        id: medicine._id,
+        type: 'Database record · provider unavailable',
+        name: medicine.name || medicine.batchNumber,
+        batchNumber: medicine.batchNumber,
+        hash: medicine.blockchainTransactionHash,
+        blockNumber: medicine.blockchainBlockNumber,
+        confirmations: 0,
+        status: 'Unverified',
+        timestamp: medicine.createdAt,
+        explorerUrl: null
+      }))
+    });
+  }
+});
+
 router.get('/:id/history', async (req, res) => {
   try {
     const medicine = await Medicine.findById(req.params.id);
@@ -84,16 +113,22 @@ router.put('/:id', async (req, res) => {
     if (updates.status && !statusValues.includes(updates.status)) return res.status(400).json({ error: `Status must be one of: ${statusValues.join(', ')}` });
     if (updates.manufacturingDate && updates.expiryDate && new Date(updates.manufacturingDate) >= new Date(updates.expiryDate)) return res.status(400).json({ error: 'Manufacturing date must be before expiry date' });
 
+    let blockchainSync = 'confirmed';
     if (updates.status && updates.status !== medicine.status) {
       const chainResult = await blockchain.updateStatus(medicine.batchNumber, statusNumbers[updates.status]);
-      if (!chainResult.success) return res.status(503).json({ error: 'Blockchain status update failed', details: chainResult.error });
-      updates.blockchainTransactionHash = chainResult.transactionHash;
-      updates.blockchainBlockNumber = chainResult.blockNumber;
+      if (!chainResult.success) {
+        if (updates.status !== 'Stored' || medicine.status !== 'InTransit') return res.status(503).json({ error: 'Blockchain status update failed', details: chainResult.error });
+        blockchainSync = 'pending';
+        logger.warn('medicine.status_update_pending', { id: medicine._id, batchNumber: medicine.batchNumber, status: updates.status, error: chainResult.error });
+      } else {
+        updates.blockchainTransactionHash = chainResult.transactionHash;
+        updates.blockchainBlockNumber = chainResult.blockNumber;
+      }
     }
     Object.assign(medicine, updates);
     await medicine.save();
     logger.info('medicine.updated', { id: medicine._id, fields: Object.keys(updates), batchNumber: medicine.batchNumber });
-    res.json({ message: 'Medicine updated successfully', medicine });
+    res.json({ message: blockchainSync === 'pending' ? 'Order accepted locally. Blockchain synchronization is pending.' : 'Medicine updated successfully', medicine, blockchainSync });
   } catch (error) { sendError(res, error, 'Failed to update medicine'); }
 });
 
@@ -122,6 +157,11 @@ router.post('/order', async (req, res) => {
     if (!medicine) return res.status(404).json({ error: 'Medicine not found or insufficient stock' });
     const chainResult = await blockchain.updateStatus(medicine.batchNumber, statusNumbers.InTransit);
     if (!chainResult.success) logger.warn('order.blockchain_status_failed', { medicineId, error: chainResult.error });
+    if (chainResult.success) {
+      medicine.blockchainTransactionHash = chainResult.transactionHash;
+      medicine.blockchainBlockNumber = chainResult.blockNumber;
+      await medicine.save();
+    }
     logger.info('medicine.order_placed', { medicineId, orderedBy, quantity: requestedQuantity, transactionHash: chainResult.transactionHash });
     res.status(201).json({ message: 'Order placed successfully', medicine });
   } catch (error) { sendError(res, error, 'Failed to place order'); }
