@@ -181,7 +181,6 @@ class BlockchainService {
 
   async getWriteOverrides() {
     const address = await this.signer.getAddress();
-    // Use a raw RPC request to bypass JsonRpcProvider's short-lived nonce cache.
     const hexNonce = await this.provider.send('eth_getTransactionCount', [address, 'pending']);
     return { nonce: Number(BigInt(hexNonce)) };
   }
